@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2563eb">
+  <title>Quiz Master - Tạo và làm trắc nghiệm</title>
+  <style>
+    :root {
+      --blue: #2563eb; --blue-dark: #1d4ed8; --green: #15803d;
+      --green-bg: #dcfce7; --red: #b91c1c; --red-bg: #fee2e2;
+      --ink: #172033; --muted: #64748b; --line: #e2e8f0;
+      --panel: #fff; --page: #f1f5f9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--page); color: var(--ink);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { max-width: 900px; margin: 0 auto; padding: 22px 16px 48px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
+    .brand { font-size:1.35rem; font-weight:800; letter-spacing:-.04em; }
+    .brand span { color:var(--blue); }
+    .sub { color:var(--muted); font-size:.9rem; margin-top:3px; }
+    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+    .tab, .btn {
+      border:1px solid var(--line); border-radius:12px; padding:10px 14px;
+      background:#fff; color:var(--ink); font-weight:650;
+    }
+    .tab.active, .btn.primary { background:var(--blue); border-color:var(--blue); color:#fff; }
+    .btn:hover, .tab:hover { filter:brightness(.97); }
+    .btn:disabled { opacity:.45; cursor:not-allowed; }
+    .panel {
+      background:var(--panel); border:1px solid var(--line); border-radius:18px;
+      padding:20px; box-shadow:0 5px 18px rgba(15,23,42,.04);
+    }
+    h1,h2,h3 { margin:0 0 12px; letter-spacing:-.025em; }
+    h1 { font-size:1.5rem; } h2 { font-size:1.2rem; }
+    p { line-height:1.55; }
+    .muted { color:var(--muted); }
+    .field { margin:14px 0; }
+    label { display:block; font-weight:650; margin-bottom:7px; }
+    input[type="text"], input[type="number"], textarea, select {
+      width:100%; border:1px solid #cbd5e1; border-radius:11px; padding:11px 12px;
+      background:#fff; color:var(--ink); outline:none;
+    }
+    textarea { min-height:88px; resize:vertical; }
+    input:focus, textarea:focus, select:focus { border-color:var(--blue); box-shadow:0 0 0 3px #dbeafe; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .option-row { display:grid; grid-template-columns:1fr auto; gap:9px; align-items:center; margin:9px 0; }
+    .correct-pick { display:flex; align-items:center; gap:6px; white-space:nowrap; font-size:.9rem; }
+    .actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; }
+    .question-card { border:1px solid var(--line); border-radius:14px; padding:14px; margin:12px 0; }
+    .question-card strong { display:block; margin-bottom:7px; }
+    .small-btn { border:0; background:#eff6ff; color:var(--blue-dark); padding:7px 10px; border-radius:9px; font-weight:650; }
+    .danger-btn { background:#fef2f2; color:var(--red); }
+    .hidden { display:none !important; }
+    .quiz-top { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+    .timer { font-weight:800; color:var(--blue-dark); background:#eff6ff; padding:8px 12px; border-radius:10px; }
+    .timer.warning { color:var(--red); background:var(--red-bg); }
+    .progress { height:8px; border-radius:99px; background:#e2e8f0; overflow:hidden; margin:14px 0 20px; }
+    .progress > div { height:100%; width:0; background:var(--blue); transition:width .2s; }
+    .question-image { display:block; max-width:100%; max-height:360px; object-fit:contain; margin:14px auto; border:1px solid var(--line); border-radius:12px; background:#f8fafc; }
+    .answers { display:grid; gap:10px; margin-top:18px; }
+    .answer {
+      text-align:left; padding:13px 14px; border:1px solid var(--line); border-radius:12px;
+      background:#fff; color:var(--ink); font-weight:600;
+    }
+    .answer:hover:not(:disabled) { border-color:var(--blue); background:#eff6ff; }
+    .answer.correct { border:2px solid var(--green); background:var(--green-bg); color:#14532d; }
+    .answer.wrong { border:2px solid var(--red); background:var(--red-bg); color:#7f1d1d; }
+    .feedback { margin-top:14px; padding:12px; border-radius:11px; font-weight:650; }
+    .feedback.good { background:var(--green-bg); color:#14532d; }
+    .feedback.bad { background:var(--red-bg); color:#7f1d1d; }
+    .score-big { font-size:2.3rem; font-weight:850; color:var(--blue); }
+    .result-row { padding:12px 0; border-bottom:1px solid var(--line); }
+    .result-row:last-child { border:0; }
+    .share-box { word-break:break-all; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:.88rem; }
+    footer { text-align:center; color:var(--muted); font-size:.82rem; margin-top:20px; }
+    @media (max-width:600px) {
+      .app { padding:16px 12px 36px; }
+      .panel { padding:16px; }
+      .grid { grid-template-columns:1fr; }
+      .tab { flex:1; padding:10px 8px; }
+      header { align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="brand">QUIZ <span>MASTER</span></div>
+      <div class="sub">Tạo câu hỏi · Luyện tập · Chia sẻ</div>
+    </div>
+    <button class="btn" id="resetAllBtn" title="Xóa dữ liệu trên thiết bị">Đặt lại</button>
+  </header>
+
+  <nav class="tabs" aria-label="Điều hướng">
+    <button class="tab active" data-tab="create">✏️ Tạo đề</button>
+    <button class="tab" data-tab="quiz">▶ Làm bài</button>
+    <button class="tab" data-tab="results">🏆 Kết quả</button>
+    <button class="tab" data-tab="share">🔗 Chia sẻ</button>
+  </nav>
+
+  <main>
+    <section id="create" class="panel">
+      <h1>Tạo bộ câu hỏi</h1>
+      <p class="muted">Nhập câu hỏi, 4 lựa chọn và đánh dấu đáp án đúng.</p>
+      <div class="field">
+        <label for="quizTitle">Tên bộ câu hỏi</label>
+        <input id="quizTitle" type="text" maxlength="90" placeholder="Ví dụ: Ôn tập Tin học">
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label for="timeLimit">Thời gian làm bài (phút)</label>
+          <input id="timeLimit" type="number" min="0" max="180" value="90">
+          <div class="muted" style="font-size:.8rem;margin-top:5px">Nhập 0 nếu không giới hạn thời gian.</div>
+        </div>
+        <div class="field">
+          <label for="questionCount">Số câu hiện có</label>
+          <input id="questionCount" type="text" value="0 câu" readonly>
+        </div>
+      </div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+      <h2 id="editorHeading">Thêm câu hỏi</h2>
+      <div class="field">
+        <label for="questionText">Nội dung câu hỏi</label>
+        <textarea id="questionText" placeholder="Nhập câu hỏi tại đây..."></textarea>
+      </div>
+      <div class="field">
+        <label for="questionImage">Hình ảnh câu hỏi (không bắt buộc)</label>
+        <input id="questionImage" type="file" accept="image/*">
+        <div class="muted" style="font-size:.8rem;margin-top:5px">Chọn ảnh từ điện thoại hoặc máy tính. Nên dùng ảnh JPG, PNG hoặc WebP dưới 2 MB.</div>
+        <div id="imagePreviewWrap" class="hidden" style="margin-top:10px">
+          <img id="imagePreview" alt="Ảnh xem trước câu hỏi" style="display:block;max-width:100%;max-height:260px;object-fit:contain;border:1px solid var(--line);border-radius:12px;background:#f8fafc">
+          <button type="button" class="small-btn danger-btn" id="removeImageBtn" style="margin-top:8px">Xóa ảnh</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Các đáp án (chọn một đáp án đúng)</label>
+        <div id="optionInputs"></div>
+      </div>
+      <div class="field">
+        <label for="explanation">Giải thích (không bắt buộc)</label>
+        <textarea id="explanation" placeholder="Giải thích vì sao đáp án này đúng..."></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="saveQuestionBtn">＋ Thêm câu hỏi</button>
+        <button class="btn" id="cancelEditBtn" style="display:none">Hủy sửa</button>
+        <button class="btn" id="clearEditorBtn">Xóa nội dung</button>
+      </div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+      <div class="quiz-top">
+        <h2>Danh sách câu hỏi</h2>
+        <button class="btn primary" id="startFromCreateBtn">Bắt đầu làm bài</button>
+      </div>
+      <div id="questionList"><p class="muted">Chưa có câu hỏi nào.</p></div>
+    </section>
+
+    <section id="quiz" class="panel hidden">
+      <div id="quizIntro">
+        <h1 id="introTitle">Sẵn sàng làm bài?</h1>
+        <p class="muted" id="introInfo">Bộ đề của bạn sẽ xuất hiện tại đây.</p>
+        <div class="actions">
+          <button class="btn primary" id="beginBtn">Bắt đầu</button>
+          <button class="btn" data-goto="create">Quay lại tạo đề</button>
+        </div>
+      </div>
+      <div id="quizPlay" class="hidden">
+        <div class="quiz-top">
+          <span class="muted" id="questionNumber">Câu 1/1</span>
+          <span class="timer" id="timer">05:00</span>
+        </div>
+        <div class="progress"><div id="progressBar"></div></div>
+        <h2 id="activeQuestion"></h2>
+        <div class="answers" id="answerButtons"></div>
+        <div id="feedback" class="feedback hidden" aria-live="polite"></div>
+        <div class="actions">
+          <button class="btn primary" id="nextBtn" disabled>Câu tiếp theo →</button>
+          <button class="btn" id="quitBtn">Kết thúc bài</button>
+        </div>
+      </div>
+      <div id="quizFinished" class="hidden">
+        <h1>Đã hoàn thành!</h1>
+        <div class="score-big" id="finalScore">0/0</div>
+        <p id="finalMessage"></p>
+        <div class="actions">
+          <button class="btn primary" id="reviewBtn">Xem kết quả chi tiết</button>
+          <button class="btn" id="retryBtn">Làm lại</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="results" class="panel hidden">
+      <h1>Kết quả bài làm</h1>
+      <div id="resultContent"><p class="muted">Bạn chưa hoàn thành bài kiểm tra nào.</p></div>
+    </section>
+
+    <section id="share" class="panel hidden">
+      <h1>Chia sẻ bộ câu hỏi</h1>
+      <p class="muted">Tạo đường dẫn chứa bộ đề đã soạn. Người nhận chỉ cần mở đường dẫn và bấm Bắt đầu làm bài; họ không cần tạo câu hỏi hay đăng nhập.</p>
+      <div class="actions">
+        <button class="btn primary" id="makeShareBtn">Tạo đường dẫn chia sẻ</button>
+        <button class="btn" id="copyShareBtn" disabled>Sao chép đường dẫn</button>
+      </div>
+      <div id="shareOutput" class="share-box hidden" style="margin-top:14px"></div>
+      <p class="muted" style="font-size:.84rem">Lưu ý: đường dẫn chứa nội dung câu hỏi và đáp án. Không đưa thông tin cá nhân hoặc nội dung riêng tư vào bộ đề.</p>
+    </section>
+  </main>
+  <footer>Quiz Master · Dữ liệu được lưu trên thiết bị của bạn</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const STORAGE_KEY = "quizMaster_v1";
+  let questions = [];
+  let editingIndex = -1;
+  let current = 0;
+  let selected = null;
+  let score = 0;
+  let answersLog = [];
+  let secondsLeft = 0;
+  let timerId = null;
+  let lastResult = null;
+  let shareUrl = "";
+  let editorImage = "";
+  const DEFAULT_QUESTIONS = [{"text":"Which word means “the work of keeping a house clean and organised”?","options":["Housework","Exercise","Teamwork","Homework"],"correct":0,"explanation":"Housework means work done to keep a home clean and organised.","image":""},{"text":"My father is the ______ in my family. He earns most of the money.","options":["breadwinner","cleaner","homemaker","visitor"],"correct":0,"explanation":"A breadwinner is a person who earns money to support a family.","image":""},{"text":"We should ______ household chores fairly among family members.","options":["divide","damage","perform","invent"],"correct":0,"explanation":"Divide chores means share the housework.","image":""},{"text":"Doing housework together can strengthen family ______.","options":["bonds","concerts","footprints","pollution"],"correct":0,"explanation":"Family bonds are the relationships between family members.","image":""},{"text":"My mother usually ______ breakfast at 6 a.m.","options":["is preparing","prepared","prepares","prepare"],"correct":2,"explanation":"Use the present simple for habits; “my mother” takes -s.","image":""},{"text":"Be quiet! My younger sister ______ for her test.","options":["is studying","studied","studies","study"],"correct":0,"explanation":"Use the present continuous for an action happening now.","image":""},{"text":"______ you often help your parents with the housework?","options":["Is","Do","Are","Does"],"correct":1,"explanation":"Use “Do” with you in present simple questions.","image":""},{"text":"Look! Dad ______ the floor at the moment.","options":["cleaned","clean","cleans","is cleaning"],"correct":3,"explanation":"“At the moment” signals the present continuous.","image":""},{"text":"Lan ______ eating fast food because she wants to be healthy.","options":["don’t like","isn’t like","doesn’t like","not likes"],"correct":2,"explanation":"Use “doesn’t” + base verb with he/she/it or a singular name.","image":""},{"text":"We ______ with our grandparents this week while our house is repaired.","options":["stay","are staying","stays","stayed"],"correct":1,"explanation":"The present continuous can describe a temporary situation.","image":""},{"text":"My brother is always ______ his dirty clothes on the floor. It annoys me.","options":["leaving","left","leave","leaves"],"correct":0,"explanation":"“Be always + V-ing” can express annoyance about repeated behaviour.","image":""},{"text":"Which sentence is correct?","options":["She do the cooking every day.","She doing the cooking every day.","She does the cooking every day.","She is do the cooking every day."],"correct":2,"explanation":"The present simple with “she” uses “does”.","image":""},{"text":"A ______ lifestyle helps protect the environment.","options":["wasteful","sustainable","careless","harmful"],"correct":1,"explanation":"A sustainable lifestyle uses resources responsibly.","image":""},{"text":"A ______ is the total amount of greenhouse gases produced by a person or activity.","options":["carbon footprint","music festival","household chore","natural talent"],"correct":0,"explanation":"A carbon footprint measures greenhouse gas emissions.","image":""},{"text":"We should use ______ bags instead of single-use plastic bags.","options":["broken","polluted","disposable","reusable"],"correct":3,"explanation":"Reusable bags can be used many times.","image":""},{"text":"Turning off lights when you leave a room helps ______ energy.","options":["pollute","produce","save","waste"],"correct":2,"explanation":"Save energy means use less energy.","image":""},{"text":"Cutting down too many trees causes ______.","options":["deforestation","recycling","celebration","protection"],"correct":0,"explanation":"Deforestation is the removal of large areas of forest.","image":""},{"text":"Many wild animals are in danger of becoming extinct. They are ______ species.","options":["ordinary","domestic","energetic","endangered"],"correct":3,"explanation":"Endangered species are at risk of extinction.","image":""},{"text":"Please put your rubbish in the bin. Don’t ______.","options":["reuse","reduce","recycle","litter"],"correct":3,"explanation":"To litter means to leave rubbish in public places.","image":""},{"text":"Using buses, bicycles or walking can help reduce air ______.","options":["performance","audience","pollution","housework"],"correct":2,"explanation":"Air pollution is harmful substances in the air.","image":""},{"text":"Look at those dark clouds! It ______ rain.","options":["will","is going to","is","has"],"correct":1,"explanation":"Use “be going to” for a prediction based on present evidence.","image":""},{"text":"I think people ______ use more clean energy in the future.","options":["will","are going","are","did"],"correct":0,"explanation":"Use “will” for a general prediction or opinion about the future.","image":""},{"text":"We have bought some young trees. We ______ them this Sunday.","options":["planted","will planting","plant","are going to plant"],"correct":3,"explanation":"“Be going to” describes an intention or plan.","image":""},{"text":"“The phone is ringing.” “I ______ answer it.”","options":["will","was","have","am going to"],"correct":0,"explanation":"Use “will” for a decision made at the moment of speaking.","image":""},{"text":"Our class ______ a clean-up event next Saturday; we have already made a plan.","options":["is going to organise","organise","organising","organised"],"correct":0,"explanation":"A planned future activity can use “be going to”.","image":""},{"text":"Which sentence expresses a prediction based on evidence?","options":["I believe she will win.","Be careful! You are going to fall!","I will help you, I promise.","I think it will be sunny one day."],"correct":1,"explanation":"The warning is based on what the speaker can see now.","image":""},{"text":"If we recycle paper, we ______ fewer trees.","options":["are saving yesterday","save","will save","saved"],"correct":2,"explanation":"The first conditional uses present simple in the if-clause and “will” in the main clause.","image":""},{"text":"Choose the correct sentence.","options":["They going to plant trees.","They are go to plant trees.","They is going to plant trees.","They are going to plant trees."],"correct":3,"explanation":"The correct form is subject + am/is/are + going to + base verb.","image":""},{"text":"A person who writes music is a ______.","options":["reporter","dancer","composer","listener"],"correct":2,"explanation":"A composer writes music.","image":""},{"text":"The people who watch or listen to a show are the ______.","options":["audience","writers","performers","judges"],"correct":0,"explanation":"The audience watches or listens to a performance.","image":""},{"text":"The singer will ______ her new song next month.","options":["divide","recycle","protect","release"],"correct":3,"explanation":"Release a song means make it available to the public.","image":""},{"text":"Thousands of fans came to the music ______.","options":["footprint","chores","festival","forest"],"correct":2,"explanation":"A music festival is an event with musical performances.","image":""},{"text":"I like pop music, ______ my sister prefers classical music.","options":["and","but","because","so"],"correct":1,"explanation":"“But” joins two contrasting ideas.","image":""},{"text":"The concert was sold out, ______ we watched the live stream at home.","options":["so","although","but","because"],"correct":0,"explanation":"“So” introduces the result.","image":""},{"text":"Mai practises singing every day, ______ she wants to become a musician.","options":["yet","or","because","but"],"correct":2,"explanation":"“Because” gives the reason.","image":""},{"text":"You can listen to the song now, ______ you can download it later.","options":["so","but","or","because"],"correct":2,"explanation":"“Or” presents a choice.","image":""},{"text":"Read the passage: “Nam’s school is starting a Green Week. Students will collect paper and plastic for recycling. They are also going to plant trees in the school garden. Nam has decided to ride his bicycle to school to reduce air pollution.” What is the main purpose of Green Week?","options":["To raise money for a new library","To teach students to cook","To help protect the environment","To prepare for a music show"],"correct":2,"explanation":"The activities in the passage are all intended to protect the environment.","image":""},{"text":"According to the passage, what will students collect?","options":["Glass and metal only","Books and toys","Food and clothes","Paper and plastic"],"correct":3,"explanation":"The passage says students will collect paper and plastic.","image":""},{"text":"What are students going to do in the school garden?","options":["Build a music stage","Plant trees","Wash bicycles","Paint classrooms"],"correct":1,"explanation":"They are going to plant trees in the school garden.","image":""},{"text":"Why will Nam ride his bicycle to school?","options":["To carry more books","To avoid Green Week","To reduce air pollution","To arrive later"],"correct":2,"explanation":"Riding a bicycle can help reduce air pollution.","image":""},{"text":"What does “breadwinner” mean?","options":["neighbour","homemaker","a person who earns money to support a family","visitor"],"correct":2,"explanation":"“breadwinner” means a person who earns money to support a family.","image":""},{"text":"What does “homemaker” mean?","options":["performer","composer","a person who manages the home","audience"],"correct":2,"explanation":"“homemaker” means a person who manages the home.","image":""},{"text":"What does “household chores” mean?","options":["music lessons","school subjects","sports events","tasks that need to be done at home"],"correct":3,"explanation":"“household chores” means tasks that need to be done at home.","image":""},{"text":"What does “laundry” mean?","options":["furniture","rubbish","clothes that need to be washed or have been washed","homework"],"correct":2,"explanation":"“laundry” means clothes that need to be washed or have been washed.","image":""},{"text":"What does “groceries” mean?","options":["food and other goods bought at a shop","musical instruments","school uniforms","concert tickets"],"correct":0,"explanation":"“groceries” means food and other goods bought at a shop.","image":""},{"text":"What does “heavy lifting” mean?","options":["the activity of carrying or moving heavy things","reading quietly","cooking quickly","singing loudly"],"correct":0,"explanation":"“heavy lifting” means the activity of carrying or moving heavy things.","image":""},{"text":"What does “bond” mean?","options":["performance","a close relationship between people","competition","pollution"],"correct":1,"explanation":"“bond” means a close relationship between people.","image":""},{"text":"What does “responsibility” mean?","options":["instrument","environment","something that it is your duty to deal with","entertainment"],"correct":2,"explanation":"“responsibility” means something that it is your duty to deal with.","image":""},{"text":"What does “routine” mean?","options":["the usual way of doing things","festival","audience","composer"],"correct":0,"explanation":"“routine” means the usual way of doing things.","image":""},{"text":"What does “benefit” mean?","options":["an advantage or a helpful result","problem","mistake","danger"],"correct":0,"explanation":"“benefit” means an advantage or a helpful result.","image":""},{"text":"What does “equally” mean?","options":["carelessly","rarely","secretly","in a way that is fair to everyone"],"correct":3,"explanation":"“equally” means in a way that is fair to everyone.","image":""},{"text":"What does “supportive” mean?","options":["harmful","helpful and encouraging","crowded","expensive"],"correct":1,"explanation":"“supportive” means helpful and encouraging.","image":""},{"text":"Choose the correct meaning of “sustainable”.","options":["dangerous","wasteful","temporary","able to continue without damaging the environment"],"correct":3,"explanation":"“sustainable” means able to continue without damaging the environment.","image":""},{"text":"Choose the correct meaning of “carbon footprint”.","options":["a type of transport","the total greenhouse gases caused by a person or activity","a kind of energy","a recycling bin"],"correct":1,"explanation":"“carbon footprint” means the total greenhouse gases caused by a person or activity.","image":""},{"text":"Choose the correct meaning of “renewable energy”.","options":["energy that cannot be reused","energy from sources that are naturally replaced","energy stored in plastic","energy from coal only"],"correct":1,"explanation":"“renewable energy” means energy from sources that are naturally replaced.","image":""},{"text":"Choose the correct meaning of “deforestation”.","options":["the protection of forests","the planting of crops","the recycling of paper","the cutting down or clearing of forests"],"correct":3,"explanation":"“deforestation” means the cutting down or clearing of forests.","image":""},{"text":"Choose the correct meaning of “biodiversity”.","options":["the level of noise","the amount of traffic","the variety of plant and animal life in an area","the size of a city"],"correct":2,"explanation":"“biodiversity” means the variety of plant and animal life in an area.","image":""},{"text":"Choose the correct meaning of “endangered”.","options":["newly discovered","safe and common","kept as a pet","at risk of becoming extinct"],"correct":3,"explanation":"“endangered” means at risk of becoming extinct.","image":""},{"text":"Choose the correct meaning of “reusable”.","options":["able to be used again","harmful to wildlife","impossible to clean","made to be thrown away"],"correct":0,"explanation":"“reusable” means able to be used again.","image":""},{"text":"Choose the correct meaning of “organic”.","options":["covered in plastic","grown or produced without using many artificial chemicals","produced by machines only","made of metal"],"correct":1,"explanation":"“organic” means grown or produced without using many artificial chemicals.","image":""},{"text":"Choose the correct meaning of “ecosystem”.","options":["a family routine","a music group","a shopping centre","a community of living things and their environment"],"correct":3,"explanation":"“ecosystem” means a community of living things and their environment.","image":""},{"text":"Choose the correct meaning of “conservation”.","options":["the production of rubbish","the destruction of forests","the protection of nature and resources","the use of more fuel"],"correct":2,"explanation":"“conservation” means the protection of nature and resources.","image":""},{"text":"Choose the correct meaning of “fossil fuels”.","options":["recycled paper","water and waves","coal, oil and natural gas","wind and sunlight"],"correct":2,"explanation":"“fossil fuels” means coal, oil and natural gas.","image":""},{"text":"Choose the correct meaning of “habitat”.","options":["a household task","a type of vehicle","the natural home of an animal or plant","a musical instrument"],"correct":2,"explanation":"“habitat” means the natural home of an animal or plant.","image":""},{"text":"What is the meaning of “composer” in the context of music?","options":["a person who sells food","a person who watches a show","a person who repairs cars","a person who writes music"],"correct":3,"explanation":"“composer” means a person who writes music.","image":""},{"text":"What is the meaning of “audience” in the context of music?","options":["the people who write songs","the people who organise traffic","the people who watch or listen to a performance","the musicians on stage"],"correct":2,"explanation":"“audience” means the people who watch or listen to a performance.","image":""},{"text":"What is the meaning of “perform” in the context of music?","options":["to reduce waste","to present music, a play or another show to an audience","to do the laundry","to protect forests"],"correct":1,"explanation":"“perform” means to present music, a play or another show to an audience.","image":""},{"text":"What is the meaning of “instrument” in the context of music?","options":["a school building","a type of pollution","an object used to make music","a household chore"],"correct":2,"explanation":"“instrument” means an object used to make music.","image":""},{"text":"What is the meaning of “single” in the context of music?","options":["a music competition","a musical instrument","a song released separately from an album","a person who sings in a choir"],"correct":2,"explanation":"“single” means a song released separately from an album.","image":""},{"text":"What is the meaning of “talented” in the context of music?","options":["having a natural ability to do something well","harmful to nature","very careless","not interested"],"correct":0,"explanation":"“talented” means having a natural ability to do something well.","image":""},{"text":"What is the meaning of “contemporary” in the context of music?","options":["related to farming","made of wood","very old-fashioned","belonging to the present time"],"correct":3,"explanation":"“contemporary” means belonging to the present time.","image":""},{"text":"What is the meaning of “melody” in the context of music?","options":["a sequence of musical notes that is pleasant to listen to","the words of a song","the speed of a car","the people at a concert"],"correct":0,"explanation":"“melody” means a sequence of musical notes that is pleasant to listen to.","image":""},{"text":"What is the meaning of “rhythm” in the context of music?","options":["a song writer","a regular pattern of sounds or beats","a ticket for a show","a type of musical instrument"],"correct":1,"explanation":"“rhythm” means a regular pattern of sounds or beats.","image":""},{"text":"What is the meaning of “judge” in the context of music?","options":["a person who repairs instruments","a person who buys tickets","a person who decides who wins a competition","a person who watches television"],"correct":2,"explanation":"“judge” means a person who decides who wins a competition.","image":""},{"text":"What is the meaning of “launch” in the context of music?","options":["to divide housework","to save electricity","to throw rubbish away","to make a new product or song available"],"correct":3,"explanation":"“launch” means to make a new product or song available.","image":""},{"text":"What is the meaning of “inspire” in the context of music?","options":["to waste resources","to stop a performance","to make someone feel that they want to do something","to make something dirty"],"correct":2,"explanation":"“inspire” means to make someone feel that they want to do something.","image":""},{"text":"My older brother usually ______ the washing-up after dinner.","options":["doing","is doing","does","do"],"correct":2,"explanation":"Use the present simple for a regular habit; “brother” takes does.","image":""},{"text":"Listen! The children ______ a song in the living room.","options":["is singing","sing","are singing","sings"],"correct":2,"explanation":"“Listen!” signals an action happening now: are singing.","image":""},{"text":"My parents ______ coffee in the evening.","options":["aren't drink","not drink","don't drink","doesn't drink"],"correct":2,"explanation":"Use don't + base verb with the plural subject “parents”.","image":""},{"text":"Why ______ you ______ at me like that?","options":["is / looking","does / look","are / looking","do / look"],"correct":2,"explanation":"The action is happening now, so use are + verb-ing.","image":""},{"text":"Water ______ at 100°C under normal conditions.","options":["is boiling","boiling","boil","boils"],"correct":3,"explanation":"Use the present simple for general facts.","image":""},{"text":"I ______ this song. It is too noisy.","options":["doesn't like","don't like","am not liking","not liking"],"correct":1,"explanation":"“Like” is usually a stative verb, so use the present simple.","image":""},{"text":"Our family ______ dinner together every Sunday.","options":["is having","has","having","have"],"correct":1,"explanation":"“Family” is singular here, so use has.","image":""},{"text":"At present, our class ______ a project about green living.","options":["is doing","do","does","are do"],"correct":0,"explanation":"“At present” indicates the present continuous.","image":""},{"text":"She often ______ her grandparents at weekends.","options":["is visit","visiting","visit","visits"],"correct":3,"explanation":"Use visits with he/she/it in the present simple.","image":""},{"text":"Be quiet! Dad ______ on the phone.","options":["are talking","talks","is talking","talk"],"correct":2,"explanation":"The action is taking place at the moment.","image":""},{"text":"They ______ in a flat this month because their house is being repaired.","options":["live","are living","lives","lived"],"correct":1,"explanation":"The present continuous can describe a temporary situation.","image":""},{"text":"How often ______ your sister ______ the piano?","options":["is / practising","do / practise","does / practises","does / practise"],"correct":3,"explanation":"Use does + subject + base verb in a present simple question.","image":""},{"text":"The Earth ______ around the Sun.","options":["is going","go","going","goes"],"correct":3,"explanation":"Use the present simple for scientific facts.","image":""},{"text":"I ______ for my keys. Have you seen them?","options":["look","am looking","looking","looks"],"correct":1,"explanation":"The speaker is searching now: am looking.","image":""},{"text":"He ______ meat because he is a vegetarian.","options":["don't eat","not eats","doesn't eat","isn't eat"],"correct":2,"explanation":"Use doesn't + base verb with he.","image":""},{"text":"Why ______ the baby ______? Is she hungry?","options":["does / cry","do / cry","are / crying","is / crying"],"correct":3,"explanation":"Use is + verb-ing for an action happening now.","image":""},{"text":"Look at those black clouds! It ______ rain soon.","options":["will","is going to","does","has"],"correct":1,"explanation":"Use be going to for a prediction based on present evidence.","image":""},{"text":"I think electric buses ______ become more popular.","options":["did","are going","will","are"],"correct":2,"explanation":"Use will for a prediction or opinion about the future.","image":""},{"text":"We have bought paint. We ______ the classroom this weekend.","options":["painted","are going to paint","will painting","paint"],"correct":1,"explanation":"Be going to describes an intention or plan.","image":""},{"text":"“I can't carry these bags.” “I ______ help you.”","options":["have","am going to","will","was"],"correct":2,"explanation":"Will is used for an offer or decision made at the moment.","image":""},{"text":"They have booked the hall. They ______ a music show next Friday.","options":["organised","organise","are going to organise","organising"],"correct":2,"explanation":"The event is already planned, so use are going to organise.","image":""},{"text":"I promise I ______ waste water.","options":["don't","won't","didn't","am not"],"correct":1,"explanation":"Use won't to make a promise about the future.","image":""},{"text":"Watch out! That glass ______ fall off the table.","options":["does","is going to","will","has"],"correct":1,"explanation":"The prediction is based on visible evidence.","image":""},{"text":"Perhaps our school ______ start a recycling club next year.","options":["is","has","will","was"],"correct":2,"explanation":"Will is suitable for a prediction with perhaps.","image":""},{"text":"She has decided that she ______ learn to play the guitar.","options":["will to","is going to","going","is"],"correct":1,"explanation":"Use be going to + base verb for an intention.","image":""},{"text":"The phone is ringing. I ______ answer it.","options":["am","am going to","will","answered"],"correct":2,"explanation":"Will expresses a spontaneous decision.","image":""},{"text":"We ______ visit the national park; we have already bought the tickets.","options":["going","are going to","will to","are"],"correct":1,"explanation":"Use are going to + base verb for a fixed plan.","image":""},{"text":"I believe people ______ use more renewable energy in the future.","options":["are","have","did","will"],"correct":3,"explanation":"Will is commonly used for beliefs and predictions.","image":""},{"text":"If we use fewer plastic bags, we ______ less plastic waste.","options":["are producing yesterday","produced","produce","will produce"],"correct":3,"explanation":"First conditional: if + present simple, will + base verb.","image":""},{"text":"If people ______ public transport, air pollution will decrease.","options":["used","will use","using","use"],"correct":3,"explanation":"The if-clause takes the present simple.","image":""},{"text":"You will save electricity if you ______ off the lights.","options":["turning","turned","will turn","turn"],"correct":3,"explanation":"Use the present simple after if in the first conditional.","image":""},{"text":"If the weather is fine tomorrow, we ______ trees in the park.","options":["plant","are plant","planted","will plant"],"correct":3,"explanation":"The main clause uses will + base verb.","image":""},{"text":"If we don't protect forests, many animals ______ their habitats.","options":["losing","lost","lose","will lose"],"correct":3,"explanation":"Use will + base verb for the result.","image":""},{"text":"Plants will not grow well if they ______ enough water.","options":["won't get","didn't get","don't get","not get"],"correct":2,"explanation":"Use present simple in the if-clause.","image":""},{"text":"If Mai practises every day, she ______ the competition.","options":["wins yesterday","may win","winning","will winning"],"correct":1,"explanation":"May win is a possible result in a first conditional sentence.","image":""},{"text":"If you heat ice, it ______.","options":["will melted","melts","melt","melting"],"correct":1,"explanation":"This is a general scientific fact, so use the zero conditional.","image":""},{"text":"If everyone recycles paper, we ______ fewer trees.","options":["cut down yesterday","cutting down","are cut down","will cut down"],"correct":3,"explanation":"The result clause can use will + base verb.","image":""},{"text":"We will miss the bus if we ______ now.","options":["don't leave","didn't leave","won't leave","not leaving"],"correct":0,"explanation":"Use present simple after if.","image":""},{"text":"I wanted to join the music club, ______ I was too busy.","options":["but","because","so","or"],"correct":0,"explanation":"But introduces a contrast.","image":""},{"text":"The concert was cancelled, ______ we went home.","options":["because","but","so","although"],"correct":2,"explanation":"So introduces the result.","image":""},{"text":"You can walk to school, ______ you can take the bus.","options":["because","so","or","although"],"correct":2,"explanation":"Or presents a choice.","image":""},{"text":"Lan stayed at home ______ she was feeling ill.","options":["because","but","so","or"],"correct":0,"explanation":"Because introduces a reason.","image":""},{"text":"My brother likes rock music, ______ I prefer pop.","options":["so","but","because","and"],"correct":1,"explanation":"But connects contrasting ideas.","image":""},{"text":"The singer was tired, ______ she continued performing.","options":["or","but","because","so"],"correct":1,"explanation":"But shows contrast.","image":""},{"text":"We should save water ______ protect the environment.","options":["and","but","although","because"],"correct":0,"explanation":"And joins two related actions.","image":""},{"text":"He forgot his ticket, ______ he could not enter the concert.","options":["but","or","although","so"],"correct":3,"explanation":"So introduces the consequence.","image":""},{"text":"I enjoy singing, ______ I am not very good at it.","options":["but","and","so","because"],"correct":0,"explanation":"But introduces a contrasting idea.","image":""},{"text":"Would you like tea ______ coffee?","options":["because","or","but","so"],"correct":1,"explanation":"Or is used to offer a choice.","image":""},{"text":"My sister enjoys ______ to music before going to bed.","options":["listen","to listen","listening","listened"],"correct":2,"explanation":"Enjoy is followed by a gerund (V-ing).","image":""},{"text":"We decided ______ a clean-up campaign.","options":["organised","to organise","organise","organising"],"correct":1,"explanation":"Decide is followed by a to-infinitive.","image":""},{"text":"He hopes ______ a famous musician one day.","options":["become","to become","became","becoming"],"correct":1,"explanation":"Hope is followed by a to-infinitive.","image":""},{"text":"They avoid ______ plastic bottles whenever possible.","options":["to use","using","use","used"],"correct":1,"explanation":"Avoid is followed by a gerund.","image":""},{"text":"I want ______ the new song.","options":["heard","hearing","hear","to hear"],"correct":3,"explanation":"Want is followed by a to-infinitive.","image":""},{"text":"She is interested in ______ the piano.","options":["learned","learn","learning","to learn"],"correct":2,"explanation":"A preposition is followed by a gerund.","image":""},{"text":"Would you mind ______ the window?","options":["opening","opened","to open","open"],"correct":0,"explanation":"Would you mind is followed by a gerund.","image":""},{"text":"Our teacher suggested ______ a recycling project.","options":["starting","start","started","to start"],"correct":0,"explanation":"Suggest is followed by a gerund.","image":""},{"text":"He promised ______ on time.","options":["arrive","arrived","to arrive","arriving"],"correct":2,"explanation":"Promise is followed by a to-infinitive.","image":""},{"text":"I look forward to ______ the performance.","options":["saw","see","to see","seeing"],"correct":3,"explanation":"In “look forward to”, to is a preposition and is followed by V-ing.","image":""},{"text":"The school concert was a great ______.","options":["successfully","successful","succeed","success"],"correct":3,"explanation":"A noun is needed after “a great”: success.","image":""},{"text":"The singer performed ______ on stage.","options":["beautiful","beauty","beautify","beautifully"],"correct":3,"explanation":"An adverb is needed to describe “performed”.","image":""},{"text":"We should make ______ choices to protect nature.","options":["environments","environmental","environment","environmentally"],"correct":1,"explanation":"The adjective environmental modifies choices.","image":""},{"text":"The students were very ______ in the campaign.","options":["active","activate","actively","activity"],"correct":0,"explanation":"An adjective is needed after “were”.","image":""},{"text":"This washing machine is more ______ than the old one.","options":["inefficiently","efficiency","efficiently","efficient"],"correct":3,"explanation":"An adjective is needed after “more”.","image":""},{"text":"The ______ of the song made everyone dance.","options":["rhythmically","rhythms","rhythm","rhythmic"],"correct":2,"explanation":"The noun rhythm is needed as the subject.","image":""},{"text":"Her voice is very ______.","options":["powerfully","powerful","power","empower"],"correct":1,"explanation":"An adjective is needed before the implied quality of her voice.","image":""},{"text":"Recycling is an ______ way to reduce waste.","options":["effect","effectively","effects","effective"],"correct":3,"explanation":"An adjective is needed before “way”.","image":""},{"text":"The team worked ______ to finish the project.","options":["careless","care","careful","carefully"],"correct":3,"explanation":"An adverb modifies the verb “worked”.","image":""},{"text":"The festival was an ______ experience.","options":["enjoyment","enjoyably","enjoyable","enjoy"],"correct":2,"explanation":"An adjective is needed before “experience”.","image":""},{"text":"A: “Would you like to come to our music show?” B: “______”","options":["It is a housework.","Never mind the environment.","I don't think music.","Yes, I'd love to."],"correct":3,"explanation":"“Yes, I'd love to” is a polite way to accept an invitation.","image":""},{"text":"A: “Thank you for helping me with the chores.” B: “______”","options":["You're welcome.","Good luck with the exam yesterday.","I disagree.","That's impossible."],"correct":0,"explanation":"“You're welcome” is a suitable response to thanks.","image":""},{"text":"A: “I'm sorry I'm late.” B: “______”","options":["Never mind, I am late too yesterday.","Here you are.","Congratulations!","That's all right."],"correct":3,"explanation":"“That's all right” is a polite response to an apology.","image":""},{"text":"A: “What do you think of the singer?” B: “______”","options":["At seven o'clock.","In the kitchen.","Two kilograms.","I think she is very talented."],"correct":3,"explanation":"The question asks for an opinion.","image":""},{"text":"A: “Let's collect rubbish around the school.” B: “______”","options":["Good idea!","No, I am a singer.","It's a musical instrument.","I don't know his address."],"correct":0,"explanation":"“Good idea” accepts a suggestion.","image":""},{"text":"A: “Could you help me carry these books?” B: “______”","options":["I'm afraid of music.","It costs ten dollars yesterday.","Not at the concert.","Of course."],"correct":3,"explanation":"“Of course” is a natural way to agree to a request.","image":""},{"text":"A: “How about joining the Green Club?” B: “______”","options":["It is made of paper.","That sounds great.","I am 16 years old.","At half past six."],"correct":1,"explanation":"“That sounds great” responds positively to a suggestion.","image":""},{"text":"A: “You sang beautifully!” B: “______”","options":["No, I don't have a ticket.","Thank you. That's very kind of you.","Because I was tired.","At the library."],"correct":1,"explanation":"“Thank you” is an appropriate response to a compliment.","image":""},{"text":"We should ______ the amount of rubbish we produce.","options":["throw","reduce","damage","increase"],"correct":1,"explanation":"Reduce means make something smaller or less.","image":""},{"text":"Please ______ the lights before leaving the room.","options":["put on","take part","look after","turn off"],"correct":3,"explanation":"Turn off means stop a light or device from working.","image":""},{"text":"Our school is going to ______ a tree-planting event.","options":["organise","waste","destroy","pollute"],"correct":0,"explanation":"Organise an event means arrange and plan it.","image":""},{"text":"Many students ______ part in the music competition.","options":["give","do","take","make"],"correct":2,"explanation":"The collocation is take part in.","image":""},{"text":"The band will ______ a new album next month.","options":["divide","release","protect","recycle"],"correct":1,"explanation":"Release an album means make it available to the public.","image":""},{"text":"My family tries to ______ water by taking shorter showers.","options":["damage","save","waste","pollute"],"correct":1,"explanation":"Save water means use less water.","image":""},{"text":"We should ______ old clothes instead of throwing them away.","options":["destroy","pollute","waste","donate"],"correct":3,"explanation":"Donate clothes means give them to people who need them.","image":""},{"text":"The singer has a large fan ______.","options":["ground","land","base","floor"],"correct":2,"explanation":"The fixed expression is fan base.","image":""},{"text":"The school wants to raise students' ______ of environmental problems.","options":["instrument","audience","performance","awareness"],"correct":3,"explanation":"Raise awareness means help people understand an issue.","image":""},{"text":"The charity concert aims to ______ money for children.","options":["grow","rise","raise","lift up"],"correct":2,"explanation":"Raise money is the correct collocation.","image":""},{"text":"We should not ______ rubbish into rivers.","options":["protect","reuse","throw","save"],"correct":2,"explanation":"Throw rubbish into rivers causes pollution.","image":""},{"text":"My father is responsible ______ preparing dinner on weekdays.","options":["for","with","at","to"],"correct":0,"explanation":"The correct phrase is responsible for.","image":""},{"text":"She is keen ______ listening to classical music.","options":["at","on","for","in"],"correct":1,"explanation":"The phrase is keen on + noun or V-ing.","image":""},{"text":"They are interested ______ joining the school band.","options":["at","in","for","on"],"correct":1,"explanation":"The correct phrase is interested in.","image":""},{"text":"We need to pay attention ______ the environment.","options":["to","at","with","for"],"correct":0,"explanation":"The phrase is pay attention to.","image":""},{"text":"The students are proud ______ their green project.","options":["of","for","at","with"],"correct":0,"explanation":"The correct phrase is proud of.","image":""},{"text":"Read the passage: “Every Saturday, Linh and her brother help their parents with household chores. Linh usually prepares lunch, while her brother washes the dishes. They believe sharing the work makes family life happier and gives everyone more free time.” What do Linh and her brother do every Saturday?","options":["They go to a concert.","They help with household chores.","They play football.","They visit a museum."],"correct":1,"explanation":"The passage says they help their parents with household chores.","image":""},{"text":"Read the passage: “Every Saturday, Linh and her brother help their parents with household chores. Linh usually prepares lunch, while her brother washes the dishes. They believe sharing the work makes family life happier and gives everyone more free time.” What does Linh usually do?","options":["She cleans the garden.","She washes the dishes.","She does her homework.","She prepares lunch."],"correct":3,"explanation":"Linh usually prepares lunch.","image":""},{"text":"Read the passage: “Every Saturday, Linh and her brother help their parents with household chores. Linh usually prepares lunch, while her brother washes the dishes. They believe sharing the work makes family life happier and gives everyone more free time.” What does her brother do?","options":["He prepares lunch.","He buys groceries.","He washes the dishes.","He waters the flowers."],"correct":2,"explanation":"Her brother washes the dishes.","image":""},{"text":"Read the passage: “Every Saturday, Linh and her brother help their parents with household chores. Linh usually prepares lunch, while her brother washes the dishes. They believe sharing the work makes family life happier and gives everyone more free time.” Why do they share the work?","options":["To prepare for a concert.","To make family life happier and save time.","To earn money.","To avoid going to school."],"correct":1,"explanation":"They believe sharing work makes family life happier and gives everyone more free time.","image":""},{"text":"Read the passage: “Green transport can make cities healthier. People can walk, cycle or use buses instead of travelling by private car. These choices can reduce air pollution and greenhouse gas emissions. City planners can also build safe cycle lanes and improve public transport.” What is the passage mainly about?","options":["The history of private cars.","Ways to improve green transport.","How to organise a family.","How to write a song."],"correct":1,"explanation":"The passage explains transport choices that can help the environment.","image":""},{"text":"Read the passage: “Green transport can make cities healthier. People can walk, cycle or use buses instead of travelling by private car. These choices can reduce air pollution and greenhouse gas emissions. City planners can also build safe cycle lanes and improve public transport.” Which of the following is a green transport choice?","options":["Using more plastic.","Cycling.","Burning rubbish.","Driving alone everywhere."],"correct":1,"explanation":"Cycling is listed as a green transport choice.","image":""},{"text":"Read the passage: “Green transport can make cities healthier. People can walk, cycle or use buses instead of travelling by private car. These choices can reduce air pollution and greenhouse gas emissions. City planners can also build safe cycle lanes and improve public transport.” What can green transport reduce?","options":["The number of school subjects.","The amount of clean water.","The number of trees.","Air pollution and greenhouse gas emissions."],"correct":3,"explanation":"The passage states that these choices reduce air pollution and emissions.","image":""},{"text":"Read the passage: “Green transport can make cities healthier. People can walk, cycle or use buses instead of travelling by private car. These choices can reduce air pollution and greenhouse gas emissions. City planners can also build safe cycle lanes and improve public transport.” What can city planners build?","options":["More rubbish dumps.","More private cars.","Music studios.","Safe cycle lanes."],"correct":3,"explanation":"The passage mentions building safe cycle lanes.","image":""},{"text":"Read the passage: “Music is an important part of many people's lives. It can help people relax, express feelings and connect with others. At school, students may join a choir, learn an instrument or take part in a music competition. These activities can build confidence and teamwork.” What is the passage mainly about?","options":["The history of transport.","Household responsibilities.","The benefits of music.","How to protect forests."],"correct":2,"explanation":"The passage describes ways music can benefit people.","image":""},{"text":"Read the passage: “Music is an important part of many people's lives. It can help people relax, express feelings and connect with others. At school, students may join a choir, learn an instrument or take part in a music competition. These activities can build confidence and teamwork.” Which activity is mentioned in the passage?","options":["Cooking dinner.","Repairing bicycles.","Planting vegetables.","Joining a choir."],"correct":3,"explanation":"Joining a choir is one of the activities mentioned.","image":""},{"text":"Read the passage: “Music is an important part of many people's lives. It can help people relax, express feelings and connect with others. At school, students may join a choir, learn an instrument or take part in a music competition. These activities can build confidence and teamwork.” Music can help people ______.","options":["avoid teamwork","waste energy","express feelings","feel more isolated"],"correct":2,"explanation":"The passage says music can help people express feelings.","image":""},{"text":"Read the passage: “Music is an important part of many people's lives. It can help people relax, express feelings and connect with others. At school, students may join a choir, learn an instrument or take part in a music competition. These activities can build confidence and teamwork.” What can music activities build?","options":["Household bills.","Traffic problems.","Air pollution.","Confidence and teamwork."],"correct":3,"explanation":"The final sentence mentions confidence and teamwork.","image":""},{"text":"My mother ______ breakfast before she goes to work.","options":["prepare","prepares","is prepare","preparing"],"correct":1,"explanation":"A regular routine takes the present simple.","image":""},{"text":"The students ______ a presentation right now.","options":["makes","are making","make","is making"],"correct":1,"explanation":"Right now signals the present continuous.","image":""},{"text":"Tom rarely ______ television on weekdays.","options":["watch","watching","watches","is watching"],"correct":2,"explanation":"Use watches with the third-person singular.","image":""},{"text":"I ______ what you mean.","options":["understands","understanding","understand","am understanding"],"correct":2,"explanation":"Understand is normally a stative verb.","image":""},{"text":"The neighbours ______ their house this week.","options":["is paint","are painting","paint","paints"],"correct":1,"explanation":"This week can describe a temporary ongoing action.","image":""},{"text":"How many times a week ______ he ______ the rubbish out?","options":["does / take","is / taking","do / take","does / takes"],"correct":0,"explanation":"Present simple questions use does + base verb.","image":""},{"text":"My cousins ______ near the beach.","options":["lives","living","are live","live"],"correct":3,"explanation":"Use the present simple for a permanent situation.","image":""},{"text":"Please be quiet. The baby ______.","options":["are sleeping","sleep","sleeps","is sleeping"],"correct":3,"explanation":"The action is happening now.","image":""},{"text":"I am sure our team ______ the match.","options":["will win","is winning yesterday","wins","won"],"correct":0,"explanation":"Will is used for a prediction.","image":""},{"text":"They have made a plan. They ______ a charity show.","options":["are hold","are going to hold","hold yesterday","will holding"],"correct":1,"explanation":"Be going to expresses a prior plan.","image":""},{"text":"I forgot my notebook. I ______ and get it.","options":["was","will","have","am going to"],"correct":1,"explanation":"Will expresses a decision made at the moment.","image":""},{"text":"Be careful! You ______ spill the water.","options":["will to","have","did","are going to"],"correct":3,"explanation":"Use be going to for a prediction based on evidence.","image":""},{"text":"Perhaps she ______ the music club next term.","options":["will join","joins","joining","is join"],"correct":0,"explanation":"Will is suitable for a future possibility.","image":""},{"text":"We ______ visit the museum on Sunday; the tickets are booked.","options":["will to","are","are going to","going"],"correct":2,"explanation":"A booked plan can use be going to.","image":""},{"text":"If you leave now, you ______ the train.","options":["will catch","catch","caught","catching"],"correct":0,"explanation":"First conditional: will + base verb in the result clause.","image":""},{"text":"If people waste less food, they ______ money.","options":["saving","saved","save","will save"],"correct":3,"explanation":"Use will + base verb for a future result.","image":""},{"text":"We will be late if we ______ a taxi soon.","options":["didn't get","won't get","don't get","not get"],"correct":2,"explanation":"Use present simple in the if-clause.","image":""},{"text":"If she studies hard, she ______ the test.","options":["passed","passes","passing","will pass"],"correct":3,"explanation":"First conditional describes a possible future result.","image":""},{"text":"I was hungry, ______ I made a sandwich.","options":["so","but","although","or"],"correct":0,"explanation":"So introduces the result.","image":""},{"text":"He likes classical music, ______ his sister likes hip-hop.","options":["whereas","so","therefore","because"],"correct":0,"explanation":"Whereas contrasts two preferences.","image":""},{"text":"We can go by bike, ______ we can take the bus.","options":["so","because","or","although"],"correct":2,"explanation":"Or presents alternatives.","image":""},{"text":"She practises every day, ______ she wants to improve.","options":["because","yet","or","but"],"correct":0,"explanation":"Because introduces the reason.","image":""},{"text":"They enjoy ______ in the school choir.","options":["to sing","sing","singing","sang"],"correct":2,"explanation":"Enjoy is followed by V-ing.","image":""},{"text":"He hopes ______ a scholarship.","options":["to get","got","get","getting"],"correct":0,"explanation":"Hope is followed by a to-infinitive.","image":""},{"text":"We finished ______ the posters.","options":["made","making","make","to make"],"correct":1,"explanation":"Finish is followed by V-ing.","image":""},{"text":"She decided ______ the competition.","options":["entering","entered","to enter","enter"],"correct":2,"explanation":"Decide is followed by a to-infinitive.","image":""},{"text":"The members of our family ______ household chores every weekend.","options":["is sharing","share","sharing","shares"],"correct":1,"explanation":"Use the base form with the plural subject.","image":""},{"text":"At the moment, my father ______ dinner for the whole family.","options":["cooking","cook","cooks","is cooking"],"correct":3,"explanation":"At the moment signals the present continuous.","image":""},{"text":"My sister usually ______ the plants before school.","options":["waters","is watering","watering","water"],"correct":0,"explanation":"Use the present simple with she.","image":""},{"text":"We ______ our grandparents this evening; everything is arranged.","options":["visiting","visit","are going to visit","visited"],"correct":2,"explanation":"Be going to describes an arranged plan.","image":""},{"text":"I think this new song ______ popular with teenagers.","options":["becomes","became","will become","becoming"],"correct":2,"explanation":"Will expresses a prediction.","image":""},{"text":"If we switch to LED bulbs, we ______ electricity.","options":["saving","will save","saved","save"],"correct":1,"explanation":"First conditional result: will + base verb.","image":""},{"text":"The school is organising a campaign ______ students about recycling.","options":["to educate","educating","educated","educate"],"correct":0,"explanation":"The to-infinitive expresses purpose.","image":""},{"text":"She is good at ______ musical instruments.","options":["to play","played","play","playing"],"correct":3,"explanation":"A preposition is followed by a gerund.","image":""},{"text":"The singer was nervous, ______ she gave an excellent performance.","options":["so","because","but","or"],"correct":2,"explanation":"But expresses contrast.","image":""},{"text":"The concert finished late, ______ we took a taxi home.","options":["although","because","but","so"],"correct":3,"explanation":"So introduces the result.","image":""},{"text":"My brother is responsible for ______ the rubbish out.","options":["taking","took","to take","take"],"correct":0,"explanation":"A preposition is followed by V-ing.","image":""},{"text":"We hope ______ the environment through small actions.","options":["to protect","protecting","protected","protect"],"correct":0,"explanation":"Hope is followed by a to-infinitive.","image":""},{"text":"Many students are interested in ______ the school music club.","options":["joining","join","joined","to join"],"correct":0,"explanation":"Interested in is followed by V-ing.","image":""},{"text":"Our teacher suggested ______ reusable water bottles.","options":["to bring","brought","bringing","bring"],"correct":2,"explanation":"Suggest is followed by a gerund.","image":""},{"text":"The audience ______ loudly after the final song.","options":["claps yesterday","clapping","clap","clapped"],"correct":3,"explanation":"The past simple is used for a completed past event.","image":""},{"text":"The band is famous ______ its energetic performances.","options":["with","at","for","in"],"correct":2,"explanation":"The phrase is famous for.","image":""},{"text":"We should take care ______ endangered animals.","options":["to","for","of","at"],"correct":2,"explanation":"The fixed phrase is take care of.","image":""},{"text":"The school concert will take place ______ Friday evening.","options":["on","in","at","by"],"correct":0,"explanation":"Use on with days.","image":""},{"text":"My parents are keen ______ gardening.","options":["at","on","for","to"],"correct":1,"explanation":"Keen on is followed by a noun or V-ing.","image":""},{"text":"This activity helps children learn how ______ as a team.","options":["work","worked","to work","working"],"correct":2,"explanation":"Learn is commonly followed by a to-infinitive.","image":""},{"text":"A person who takes care of the home is often called a ______.","options":["homemaker","composer","audience","judge"],"correct":0,"explanation":"A homemaker manages the home.","image":""},{"text":"A person who earns money to support the family is the ______.","options":["breadwinner","volunteer","listener","performer"],"correct":0,"explanation":"A breadwinner earns money for the family.","image":""},{"text":"Washing clothes is also called doing the ______.","options":["footprint","recycling","laundry","performance"],"correct":2,"explanation":"Laundry refers to clothes being washed.","image":""},{"text":"The people watching a live show are the ______.","options":["audience","organisers","composers","drivers"],"correct":0,"explanation":"The audience watches or listens to a performance.","image":""},{"text":"A person who creates songs or other music is a ______.","options":["dancer","audience","composer","fan"],"correct":2,"explanation":"A composer writes music.","image":""},{"text":"A song that is released separately is often called a ______.","options":["single","stage","choir","rhythm"],"correct":0,"explanation":"A single is a song released separately.","image":""},{"text":"Solar and wind power are examples of ______ energy.","options":["polluted","renewable","limited","wasteful"],"correct":1,"explanation":"Solar and wind energy are renewable sources.","image":""},{"text":"Using a bottle many times instead of throwing it away means it is ______.","options":["endangered","reusable","disposable","harmful"],"correct":1,"explanation":"Reusable means it can be used again.","image":""},{"text":"The natural home of a wild animal is its ______.","options":["audience","instrument","habitat","routine"],"correct":2,"explanation":"A habitat is the natural home of an organism.","image":""},{"text":"The variety of living things in an area is called ______.","options":["deforestation","rehearsal","biodiversity","housework"],"correct":2,"explanation":"Biodiversity is the variety of life.","image":""},{"text":"A species at risk of disappearing forever is ______.","options":["endangered","common","domestic","musical"],"correct":0,"explanation":"Endangered species face a risk of extinction.","image":""},{"text":"The process of turning used materials into new products is ______.","options":["recycling","laundry","performing","deforestation"],"correct":0,"explanation":"Recycling turns waste materials into new products.","image":""},{"text":"A large event with many musical performances is a music ______.","options":["footprint","routine","festival","habitat"],"correct":2,"explanation":"A music festival features musical performances.","image":""},{"text":"A group of singers who perform together is a ______.","options":["judge","solo","single","choir"],"correct":3,"explanation":"A choir is a group of singers.","image":""},{"text":"The regular pattern of beats in music is its ______.","options":["lyrics","rhythm","stage","audience"],"correct":1,"explanation":"Rhythm is the pattern of beats.","image":""},{"text":"The words of a song are its ______.","options":["tickets","melody","lyrics","instruments"],"correct":2,"explanation":"Lyrics are the words of a song.","image":""},{"text":"A balanced division of chores can strengthen family ______.","options":["habitats","emissions","melodies","bonds"],"correct":3,"explanation":"Family bonds are relationships between family members.","image":""},{"text":"My family makes a weekly ______ so everyone knows their tasks.","options":["schedule","instrument","footprint","audience"],"correct":0,"explanation":"A schedule is a plan of activities.","image":""},{"text":"Children should learn to take ______ for their own tasks.","options":["pollution","responsibility","rhythm","performance"],"correct":1,"explanation":"Take responsibility is a common collocation.","image":""},{"text":"The new washing machine uses less water, so it is more ______.","options":["efficiently","inefficiently","efficiency","efficient"],"correct":3,"explanation":"Efficient is the adjective describing the machine.","image":""},{"text":"We should avoid ______ food because it creates unnecessary waste.","options":["to waste","waste","wasted","wasting"],"correct":3,"explanation":"Avoid is followed by a gerund.","image":""},{"text":"The community planted trees to improve the local ______.","options":["audience","routine","performance","environment"],"correct":3,"explanation":"Environment refers to the natural world around us.","image":""},{"text":"A carbon footprint is related to greenhouse gas ______.","options":["emissions","tickets","chores","lyrics"],"correct":0,"explanation":"Emissions are gases released into the atmosphere.","image":""},{"text":"Walking to school is a simple way to reduce your carbon ______.","options":["melody","laundry","footprint","audience"],"correct":2,"explanation":"Carbon footprint measures emissions linked to an activity.","image":""},{"text":"The school encourages students to ______ old paper.","options":["recycle","perform","release","compose"],"correct":0,"explanation":"Paper can be recycled into new products.","image":""},{"text":"We should protect forests because they provide a ______ for wildlife.","options":["routine","single","habitat","concert"],"correct":2,"explanation":"Forests provide habitats for many species.","image":""},{"text":"The singer received a warm welcome from the ______.","options":["audience","breadwinner","homemaker","ecosystem"],"correct":0,"explanation":"The audience welcomes performers.","image":""},{"text":"The young musician can play several musical ______.","options":["instruments","habitats","footprints","chores"],"correct":0,"explanation":"Instruments are objects used to make music.","image":""},{"text":"The judges praised her excellent stage ______.","options":["laundry","pollution","deforestation","performance"],"correct":3,"explanation":"A performance is a presentation to an audience.","image":""},{"text":"The song has a catchy ______ that is easy to remember.","options":["melody","habitat","routine","chores"],"correct":0,"explanation":"A melody is a sequence of musical notes.","image":""},{"text":"The charity event aims to raise ______ for poor children.","options":["rhythm","pollution","laundry","money"],"correct":3,"explanation":"Raise money is the correct expression.","image":""},{"text":"Choose the correct sentence about family routines (practice question 258).","options":["My sister help with the chores every day.","My sister helping with the chores every day.","My sister helps with the chores every day.","My sister is help with the chores every day."],"correct":2,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 259).","options":["We are going to plant trees next week.","We going plant trees next week.","We are go to plant trees next week.","We is going to plant trees next week."],"correct":0,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 260).","options":["She enjoys singing in the choir.","She enjoys to sing in the choir.","She enjoying sing in the choir.","She enjoy singing in the choir."],"correct":0,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 261).","options":["My sister helping with the chores every day.","My sister is help with the chores every day.","My sister helps with the chores every day.","My sister help with the chores every day."],"correct":2,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 262).","options":["We are going to plant trees next week.","We going plant trees next week.","We is going to plant trees next week.","We are go to plant trees next week."],"correct":0,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 263).","options":["She enjoying sing in the choir.","She enjoys to sing in the choir.","She enjoy singing in the choir.","She enjoys singing in the choir."],"correct":3,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 264).","options":["My sister helping with the chores every day.","My sister is help with the chores every day.","My sister helps with the chores every day.","My sister help with the chores every day."],"correct":2,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 265).","options":["We are going to plant trees next week.","We is going to plant trees next week.","We are go to plant trees next week.","We going plant trees next week."],"correct":0,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 266).","options":["She enjoys to sing in the choir.","She enjoys singing in the choir.","She enjoying sing in the choir.","She enjoy singing in the choir."],"correct":1,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 267).","options":["My sister help with the chores every day.","My sister is help with the chores every day.","My sister helps with the chores every day.","My sister helping with the chores every day."],"correct":2,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 268).","options":["We are going to plant trees next week.","We going plant trees next week.","We are go to plant trees next week.","We is going to plant trees next week."],"correct":0,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 269).","options":["She enjoying sing in the choir.","She enjoy singing in the choir.","She enjoys singing in the choir.","She enjoys to sing in the choir."],"correct":2,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 270).","options":["My sister helps with the chores every day.","My sister help with the chores every day.","My sister helping with the chores every day.","My sister is help with the chores every day."],"correct":0,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 271).","options":["We are going to plant trees next week.","We is going to plant trees next week.","We going plant trees next week.","We are go to plant trees next week."],"correct":0,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 272).","options":["She enjoys to sing in the choir.","She enjoying sing in the choir.","She enjoys singing in the choir.","She enjoy singing in the choir."],"correct":2,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 273).","options":["My sister help with the chores every day.","My sister helping with the chores every day.","My sister helps with the chores every day.","My sister is help with the chores every day."],"correct":2,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 274).","options":["We going plant trees next week.","We is going to plant trees next week.","We are going to plant trees next week.","We are go to plant trees next week."],"correct":2,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 275).","options":["She enjoy singing in the choir.","She enjoys singing in the choir.","She enjoying sing in the choir.","She enjoys to sing in the choir."],"correct":1,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 276).","options":["My sister helping with the chores every day.","My sister help with the chores every day.","My sister is help with the chores every day.","My sister helps with the chores every day."],"correct":3,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 277).","options":["We going plant trees next week.","We are go to plant trees next week.","We are going to plant trees next week.","We is going to plant trees next week."],"correct":2,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 278).","options":["She enjoy singing in the choir.","She enjoying sing in the choir.","She enjoys singing in the choir.","She enjoys to sing in the choir."],"correct":2,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 279).","options":["My sister helping with the chores every day.","My sister helps with the chores every day.","My sister is help with the chores every day.","My sister help with the chores every day."],"correct":1,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 280).","options":["We are going to plant trees next week.","We is going to plant trees next week.","We going plant trees next week.","We are go to plant trees next week."],"correct":0,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 281).","options":["She enjoys singing in the choir.","She enjoy singing in the choir.","She enjoys to sing in the choir.","She enjoying sing in the choir."],"correct":0,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 282).","options":["My sister helps with the chores every day.","My sister helping with the chores every day.","My sister is help with the chores every day.","My sister help with the chores every day."],"correct":0,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 283).","options":["We going plant trees next week.","We is going to plant trees next week.","We are going to plant trees next week.","We are go to plant trees next week."],"correct":2,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 284).","options":["She enjoys to sing in the choir.","She enjoys singing in the choir.","She enjoy singing in the choir.","She enjoying sing in the choir."],"correct":1,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 285).","options":["My sister is help with the chores every day.","My sister help with the chores every day.","My sister helping with the chores every day.","My sister helps with the chores every day."],"correct":3,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 286).","options":["We are go to plant trees next week.","We are going to plant trees next week.","We is going to plant trees next week.","We going plant trees next week."],"correct":1,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 287).","options":["She enjoy singing in the choir.","She enjoying sing in the choir.","She enjoys singing in the choir.","She enjoys to sing in the choir."],"correct":2,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 288).","options":["My sister helps with the chores every day.","My sister help with the chores every day.","My sister is help with the chores every day.","My sister helping with the chores every day."],"correct":0,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 289).","options":["We are go to plant trees next week.","We are going to plant trees next week.","We going plant trees next week.","We is going to plant trees next week."],"correct":1,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 290).","options":["She enjoys singing in the choir.","She enjoying sing in the choir.","She enjoys to sing in the choir.","She enjoy singing in the choir."],"correct":0,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 291).","options":["My sister help with the chores every day.","My sister is help with the chores every day.","My sister helping with the chores every day.","My sister helps with the chores every day."],"correct":3,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 292).","options":["We are going to plant trees next week.","We is going to plant trees next week.","We are go to plant trees next week.","We going plant trees next week."],"correct":0,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 293).","options":["She enjoys to sing in the choir.","She enjoying sing in the choir.","She enjoy singing in the choir.","She enjoys singing in the choir."],"correct":3,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 294).","options":["My sister help with the chores every day.","My sister is help with the chores every day.","My sister helping with the chores every day.","My sister helps with the chores every day."],"correct":3,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 295).","options":["We are going to plant trees next week.","We are go to plant trees next week.","We going plant trees next week.","We is going to plant trees next week."],"correct":0,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 296).","options":["She enjoy singing in the choir.","She enjoys to sing in the choir.","She enjoying sing in the choir.","She enjoys singing in the choir."],"correct":3,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 297).","options":["My sister helping with the chores every day.","My sister helps with the chores every day.","My sister help with the chores every day.","My sister is help with the chores every day."],"correct":1,"explanation":"Use the present simple with a third-person singular subject.","image":""},{"text":"Choose the correct sentence about environmental plans (practice question 298).","options":["We is going to plant trees next week.","We are go to plant trees next week.","We going plant trees next week.","We are going to plant trees next week."],"correct":3,"explanation":"Use subject + am/is/are + going to + base verb.","image":""},{"text":"Choose the correct sentence about music (practice question 299).","options":["She enjoy singing in the choir.","She enjoys singing in the choir.","She enjoys to sing in the choir.","She enjoying sing in the choir."],"correct":1,"explanation":"Enjoy is followed by a gerund, and she takes enjoys.","image":""},{"text":"Choose the correct sentence about family routines (practice question 300).","options":["My sister help with the chores every day.","My sister helps with the chores every day.","My sister is help with the chores every day.","My sister helping with the chores every day."],"correct":1,"explanation":"Use the present simple with a third-person singular subject.","image":""}];
+
+  const escapeHTML = value => String(value).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[ch]);
+
+  function defaultOptions() {
+    $("optionInputs").innerHTML = [0,1,2,3].map(i => `
+      <div class="option-row">
+        <input type="text" class="option-input" maxlength="180" placeholder="Đáp án ${String.fromCharCode(65+i)}">
+        <label class="correct-pick"><input type="radio" name="correctOption" value="${i}" ${i===0?"checked":""}> Đúng</label>
+      </div>`).join("");
+  }
+
+  function saveLocal() {
+    const data = { title:$("quizTitle").value, timeLimit:Number($("timeLimit").value)||0, questions };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    catch (e) { alert("Không thể lưu dữ liệu trên thiết bị này."); }
+    updateCount();
+  }
+
+  function loadLocal() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (data && Array.isArray(data.questions) && data.questions.length) {
+        questions = data.questions;
+        $("quizTitle").value = data.title || "";
+        $("timeLimit").value = Number(data.timeLimit) >= 0 ? data.timeLimit : 30;
+      } else {
+        questions = DEFAULT_QUESTIONS.map(q => ({...q, options:[...q.options]}));
+        $("quizTitle").value = "Ôn tập Tiếng Anh 10 - Giữa học kì 1";
+        $("timeLimit").value = 90;
+        saveLocal();
+      }
+    } catch (e) {
+      questions = DEFAULT_QUESTIONS.map(q => ({...q, options:[...q.options]}));
+      $("quizTitle").value = "Ôn tập Tiếng Anh 10 - Giữa học kì 1";
+      $("timeLimit").value = 90;
+      saveLocal();
+    }
+    updateCount();
+    renderQuestionList();
+  }
+
+  function updateCount() { $("questionCount").value = `${questions.length} câu`; }
+
+  function clearEditor() {
+    $("questionText").value = "";
+    $("explanation").value = "";
+    editorImage = "";
+    $("questionImage").value = "";
+    $("imagePreview").src = "";
+    $("imagePreviewWrap").classList.add("hidden");
+    document.querySelectorAll(".option-input").forEach(input => input.value = "");
+    const first = document.querySelector('input[name="correctOption"][value="0"]');
+    if (first) first.checked = true;
+    editingIndex = -1;
+    $("editorHeading").textContent = "Thêm câu hỏi";
+    $("saveQuestionBtn").textContent = "＋ Thêm câu hỏi";
+    $("cancelEditBtn").style.display = "none";
+  }
+
+  function saveQuestion() {
+    const text = $("questionText").value.trim();
+    const options = [...document.querySelectorAll(".option-input")].map(input => input.value.trim());
+    const correct = Number(document.querySelector('input[name="correctOption"]:checked')?.value);
+    if (!text) return alert("Bạn hãy nhập nội dung câu hỏi.");
+    if (options.some(option => !option)) return alert("Hãy nhập đủ cả 4 đáp án.");
+    if (new Set(options.map(x => x.toLocaleLowerCase())).size !== 4) return alert("Các đáp án không được trùng nhau.");
+    const item = { text, options, correct, explanation:$("explanation").value.trim(), image:editorImage };
+    if (editingIndex >= 0) questions[editingIndex] = item;
+    else questions.push(item);
+    saveLocal();
+    renderQuestionList();
+    clearEditor();
+  }
+
+  function editQuestion(index) {
+    const q = questions[index];
+    editingIndex = index;
+    $("questionText").value = q.text;
+    $("explanation").value = q.explanation || "";
+    editorImage = q.image || "";
+    $("questionImage").value = "";
+    if (editorImage) {
+      $("imagePreview").src = editorImage;
+      $("imagePreviewWrap").classList.remove("hidden");
+    } else {
+      $("imagePreview").src = "";
+      $("imagePreviewWrap").classList.add("hidden");
+    }
+    document.querySelectorAll(".option-input").forEach((input,i) => input.value = q.options[i] || "");
+    const radio = document.querySelector(`input[name="correctOption"][value="${q.correct}"]`);
+    if (radio) radio.checked = true;
+    $("editorHeading").textContent = `Sửa câu hỏi ${index+1}`;
+    $("saveQuestionBtn").textContent = "Lưu thay đổi";
+    $("cancelEditBtn").style.display = "inline-block";
+    $("questionText").focus();
+  }
+
+  function renderQuestionList() {
+    updateCount();
+    if (!questions.length) {
+      $("questionList").innerHTML = '<p class="muted">Chưa có câu hỏi nào.</p>';
+      return;
+    }
+    $("questionList").innerHTML = questions.map((q,i) => `
+      <div class="question-card">
+        <strong>${i+1}. ${escapeHTML(q.text)}</strong>
+        ${q.image ? `<img class="question-image" style="max-height:150px;margin:10px 0" src="${q.image}" alt="Ảnh câu hỏi ${i+1}">` : ""}
+        <div class="muted" style="font-size:.9rem">Đáp án đúng: ${escapeHTML(q.options[q.correct])}</div>
+        <div class="actions">
+          <button class="small-btn" data-edit="${i}">Sửa</button>
+          <button class="small-btn danger-btn" data-delete="${i}">Xóa</button>
+        </div>
+      </div>`).join("");
+    $("questionList").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => editQuestion(Number(btn.dataset.edit))));
+    $("questionList").querySelectorAll("[data-delete]").forEach(btn => btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.delete);
+      if (confirm(`Xóa câu hỏi ${index+1}?`)) {
+        questions.splice(index,1); saveLocal(); renderQuestionList();
+        if (editingIndex === index) clearEditor();
+      }
+    }));
+  }
+
+  function showTab(name) {
+    document.querySelectorAll("main > section").forEach(section => section.classList.toggle("hidden", section.id !== name));
+    document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.tab === name));
+    if (name === "quiz") updateIntro();
+    if (name === "results") renderResults();
+    if (name === "share") $("shareOutput").classList.toggle("hidden", !shareUrl);
+  }
+
+  function updateIntro() {
+    $("introTitle").textContent = $("quizTitle").value.trim() || "Bài trắc nghiệm";
+    $("introInfo").textContent = `${questions.length} câu hỏi · ${Number($("timeLimit").value)||0 ? (Number($("timeLimit").value)+" phút") : "Không giới hạn thời gian"}`;
+  }
+
+  function startQuiz() {
+    if (!questions.length) { alert("Bạn cần tạo ít nhất một câu hỏi trước."); showTab("create"); return; }
+    clearInterval(timerId);
+    current = 0; selected = null; score = 0; answersLog = [];
+    $("quizIntro").classList.add("hidden");
+    $("quizFinished").classList.add("hidden");
+    $("quizPlay").classList.remove("hidden");
+    secondsLeft = Math.max(0, Number($("timeLimit").value)||0) * 60;
+    updateTimer();
+    if (secondsLeft > 0) timerId = setInterval(() => {
+      secondsLeft--;
+      updateTimer();
+      if (secondsLeft <= 0) finishQuiz(true);
+    }, 1000);
+    renderCurrentQuestion();
+  }
+
+  function updateTimer() {
+    const timer = $("timer");
+    timer.textContent = secondsLeft > 0
+      ? `${String(Math.floor(secondsLeft/60)).padStart(2,"0")}:${String(secondsLeft%60).padStart(2,"0")}`
+      : (Number($("timeLimit").value)||0 ? "00:00" : "Không giới hạn");
+    timer.classList.toggle("warning", secondsLeft > 0 && secondsLeft <= 30);
+  }
+
+  function renderCurrentQuestion() {
+    const q = questions[current];
+    selected = null;
+    $("questionNumber").textContent = `Câu ${current+1}/${questions.length}`;
+    $("progressBar").style.width = `${(current/questions.length)*100}%`;
+    $("activeQuestion").textContent = q.text;
+    const oldQuestionImage = $("activeQuestionImage");
+    if (oldQuestionImage) oldQuestionImage.remove();
+    if (q.image) {
+      const img = document.createElement("img");
+      img.id = "activeQuestionImage";
+      img.className = "question-image";
+      img.src = q.image;
+      img.alt = "Hình minh họa câu hỏi";
+      $("activeQuestion").insertAdjacentElement("afterend", img);
+    }
+    $("feedback").className = "feedback hidden";
+    $("feedback").textContent = "";
+    $("nextBtn").disabled = true;
+    $("nextBtn").textContent = current === questions.length-1 ? "Xem kết quả →" : "Câu tiếp theo →";
+    $("answerButtons").innerHTML = q.options.map((option,i) => `
+      <button class="answer" data-answer="${i}">${String.fromCharCode(65+i)}. ${escapeHTML(option)}</button>`).join("");
+    $("answerButtons").querySelectorAll("[data-answer]").forEach(btn => btn.addEventListener("click", () => chooseAnswer(Number(btn.dataset.answer))));
+  }
+
+  function chooseAnswer(index) {
+    if (selected !== null) return;
+    selected = index;
+    const q = questions[current];
+    const isCorrect = index === q.correct;
+    if (isCorrect) score++;
+    answersLog[current] = { selected:index, correct:q.correct, isCorrect };
+    $("answerButtons").querySelectorAll(".answer").forEach((btn,i) => {
+      btn.disabled = true;
+      if (i === q.correct) btn.classList.add("correct");
+      else if (i === index) btn.classList.add("wrong");
+    });
+    const feedback = $("feedback");
+    feedback.classList.remove("hidden");
+    feedback.classList.add(isCorrect ? "good" : "bad");
+    feedback.textContent = isCorrect
+      ? "✓ Chính xác! Bạn đã trả lời đúng."
+      : `✕ Chưa chính xác. Đáp án đúng: ${q.options[q.correct]}.`;
+    if (q.explanation) feedback.textContent += ` Giải thích: ${q.explanation}`;
+    $("nextBtn").disabled = false;
+  }
+
+  function nextQuestion() {
+    if (selected === null) return;
+    if (current < questions.length-1) { current++; renderCurrentQuestion(); }
+    else finishQuiz(false);
+  }
+
+  function finishQuiz(timeUp) {
+    clearInterval(timerId);
+    // Câu chưa trả lời khi hết giờ được tính là sai.
+    for (let i=0;i<questions.length;i++) {
+      if (!answersLog[i]) answersLog[i] = { selected:null, correct:questions[i].correct, isCorrect:false };
+    }
+    lastResult = {
+      title:$("quizTitle").value.trim() || "Bài trắc nghiệm",
+      score, total:questions.length, answers:answersLog.slice(),
+      timeUp, date:new Date().toLocaleString("vi-VN")
+    };
+    $("quizPlay").classList.add("hidden");
+    $("quizFinished").classList.remove("hidden");
+    $("finalScore").textContent = `${score}/${questions.length}`;
+    $("finalMessage").textContent = timeUp
+      ? "Đã hết thời gian. Các câu chưa trả lời được tính là sai."
+      : (score === questions.length ? "Xuất sắc! Bạn đã trả lời đúng tất cả." : `Bạn trả lời đúng ${score} trên ${questions.length} câu.`);
+    $("progressBar").style.width = "100%";
+    renderResults();
+  }
+
+  function renderResults() {
+    if (!lastResult) {
+      $("resultContent").innerHTML = '<p class="muted">Bạn chưa hoàn thành bài kiểm tra nào.</p>';
+      return;
+    }
+    const percent = Math.round(lastResult.score/lastResult.total*100);
+    $("resultContent").innerHTML = `
+      <div class="score-big">${lastResult.score}/${lastResult.total}</div>
+      <p><strong>${percent}% chính xác</strong> · ${escapeHTML(lastResult.title)}</p>
+      <p class="muted">${escapeHTML(lastResult.date)}${lastResult.timeUp?" · Hết giờ":""}</p>
+      <div class="progress"><div style="width:${percent}%"></div></div>
+      ${questions.map((q,i) => {
+        const a = lastResult.answers[i];
+        const correct = a && a.isCorrect;
+        return `<div class="result-row">
+          <strong>${i+1}. ${escapeHTML(q.text)}</strong>
+          ${q.image ? `<img class="question-image" style="max-height:180px;margin:10px 0" src="${q.image}" alt="Ảnh câu hỏi ${i+1}">` : ""}
+          <p style="margin:7px 0;color:${correct?"var(--green)":"var(--red)"};font-weight:650">
+            ${correct?"✓ Đúng":"✕ Sai hoặc chưa trả lời"}
+          </p>
+          <div class="muted">Bạn chọn: ${a && a.selected!==null ? escapeHTML(q.options[a.selected]) : "Chưa trả lời"}</div>
+          <div>Đáp án đúng: <strong>${escapeHTML(q.options[q.correct])}</strong></div>
+          ${q.explanation?`<div class="muted">Giải thích: ${escapeHTML(q.explanation)}</div>`:""}
+        </div>`;
+      }).join("")}`;
+  }
+
+  function encodeShare(data) {
+    const bytes = new TextEncoder().encode(JSON.stringify(data));
+    let binary = "";
+    bytes.forEach(byte => binary += String.fromCharCode(byte));
+    return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  }
+  function decodeShare(encoded) {
+    const base64 = encoded.replace(/-/g,"+").replace(/_/g,"/");
+    const binary = atob(base64);
+    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  function makeShare() {
+    if (!questions.length) return alert("Bạn cần tạo ít nhất một câu hỏi trước khi chia sẻ.");
+    const data = { title:$("quizTitle").value.trim()||"Bộ câu hỏi", timeLimit:Number($("timeLimit").value)||0, questions };
+    const url = new URL(location.href);
+    url.hash = "quiz=" + encodeShare(data);
+    shareUrl = url.toString();
+    $("shareOutput").textContent = shareUrl;
+    $("shareOutput").classList.remove("hidden");
+    $("copyShareBtn").disabled = false;
+  }
+  async function copyShare() {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert("Đã sao chép đường dẫn chia sẻ.");
+    } catch (e) {
+      const area = document.createElement("textarea");
+      area.value = shareUrl; document.body.appendChild(area); area.select();
+      document.execCommand("copy"); area.remove();
+      alert("Đã sao chép đường dẫn (nếu trình duyệt cho phép).");
+    }
+  }
+  function importSharedQuiz() {
+    if (!location.hash.startsWith("#quiz=")) return;
+    try {
+      const data = decodeShare(location.hash.slice(6));
+      if (!data || !Array.isArray(data.questions) || !data.questions.length) throw new Error("Invalid quiz");
+      const valid = data.questions.every(q => q && typeof q.text==="string" &&
+        Array.isArray(q.options) && q.options.length===4 &&
+        q.options.every(x=>typeof x==="string") &&
+        Number.isInteger(q.correct) && q.correct>=0 && q.correct<4);
+      if (!valid) throw new Error("Invalid question data");
+      questions = data.questions;
+      $("quizTitle").value = String(data.title||"Bộ câu hỏi").slice(0,90);
+      $("timeLimit").value = Math.min(180,Math.max(0,Number(data.timeLimit)||0));
+      saveLocal(); renderQuestionList();
+      // Visitor mode: people opening a shared quiz link can take the quiz
+      // without seeing the question editor or the sharing controls.
+      document.body.classList.add("visitor-mode");
+      const createTab = document.querySelector('.tab[data-tab="create"]');
+      const shareTab = document.querySelector('.tab[data-tab="share"]');
+      if (createTab) createTab.classList.add("hidden");
+      if (shareTab) shareTab.classList.add("hidden");
+      $("resetAllBtn").classList.add("hidden");
+      $("quizIntro").classList.remove("hidden");
+      $("quizPlay").classList.add("hidden");
+      $("quizFinished").classList.add("hidden");
+      $("introTitle").textContent = $("quizTitle").value || "Bài trắc nghiệm";
+      $("introInfo").textContent = `${questions.length} câu hỏi · ${Number($("timeLimit").value)||0 ? (Number($("timeLimit").value)+" phút") : "Không giới hạn thời gian"}`;
+      history.replaceState(null,"",location.pathname+location.search);
+      showTab("quiz");
+    } catch (e) {
+      alert("Đường dẫn chia sẻ không hợp lệ hoặc dữ liệu bị lỗi.");
+      history.replaceState(null,"",location.pathname+location.search);
+    }
+  }
+
+  document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => showTab(tab.dataset.tab)));
+  document.querySelectorAll("[data-goto]").forEach(btn => btn.addEventListener("click", () => showTab(btn.dataset.goto)));
+  $("saveQuestionBtn").addEventListener("click", saveQuestion);
+  $("questionImage").addEventListener("change", event => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chọn một tệp hình ảnh.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ảnh quá lớn. Vui lòng chọn ảnh có dung lượng dưới 2 MB.");
+      event.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      editorImage = String(reader.result || "");
+      $("imagePreview").src = editorImage;
+      $("imagePreviewWrap").classList.remove("hidden");
+    };
+    reader.onerror = () => alert("Không đọc được ảnh này. Hãy thử chọn ảnh khác.");
+    reader.readAsDataURL(file);
+  });
+  $("removeImageBtn").addEventListener("click", () => {
+    editorImage = "";
+    $("questionImage").value = "";
+    $("imagePreview").src = "";
+    $("imagePreviewWrap").classList.add("hidden");
+  });
+  $("cancelEditBtn").addEventListener("click", clearEditor);
+  $("clearEditorBtn").addEventListener("click", clearEditor);
+  $("startFromCreateBtn").addEventListener("click", () => { showTab("quiz"); updateIntro(); });
+  $("beginBtn").addEventListener("click", startQuiz);
+  $("nextBtn").addEventListener("click", nextQuestion);
+  $("quitBtn").addEventListener("click", () => { if (confirm("Bạn muốn kết thúc bài kiểm tra?")) finishQuiz(false); });
+  $("reviewBtn").addEventListener("click", () => showTab("results"));
+  $("retryBtn").addEventListener("click", startQuiz);
+  $("makeShareBtn").addEventListener("click", makeShare);
+  $("copyShareBtn").addEventListener("click", copyShare);
+  $("quizTitle").addEventListener("input", saveLocal);
+  $("timeLimit").addEventListener("change", saveLocal);
+  $("resetAllBtn").addEventListener("click", () => {
+    if (confirm("Xóa toàn bộ câu hỏi và dữ liệu đã lưu trên thiết bị?")) {
+      localStorage.removeItem(STORAGE_KEY); questions=[]; lastResult=null;
+      $("quizTitle").value=""; $("timeLimit").value=5; clearEditor();
+      saveLocal(); renderQuestionList(); renderResults(); showTab("create");
+    }
+  });
+
+  defaultOptions();
+  loadLocal();
+  importSharedQuiz();
+  if (!location.hash.startsWith("#quiz=")) showTab("quiz");
+})();
+</script>
+</body>
+</html>
